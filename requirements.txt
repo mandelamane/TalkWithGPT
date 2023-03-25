@@ -1,0 +1,7 @@
+numpy
+openai
+pyaudio
+tqdm
+torch
+whisper
+espnet2
