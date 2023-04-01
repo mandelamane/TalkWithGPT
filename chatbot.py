@@ -1,6 +1,8 @@
+import argparse
 import os
 import time
 import warnings
+from typing import Dict, List
 
 import numpy as np
 import openai
@@ -19,6 +21,26 @@ CHANNELS = 1  # a number of channels
 RATE = 44100  # sampling rate
 FRAMES_PER_BUFFER = 1024  # buffer size
 WAV_FILE = "tmp/tmp.wav"  # 　path to wave file
+
+
+def read_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--system",
+        type=str,
+        default="content.txt",
+        help="chatgptの人格設定が記載されたファイルのパス",
+    )
+    parser.add_argument(
+        "--whisper",
+        type=str,
+        default="base",
+        help="モデルの大きさ[base, large, multilingual, multilingual-large]",
+    )
+
+    args = parser.parse_args()
+    return args
 
 
 def get_t2s_model(
@@ -51,7 +73,7 @@ def get_t2s_model(
     return t2s_model
 
 
-def get_s2t_model(mode: str = "large") -> whisper.model.Whisper:
+def get_s2t_model(mode: str = "base") -> whisper.model.Whisper:
     """
     load speech-to-text model using whisper
 
@@ -118,7 +140,7 @@ def text2wav_array(t2s_model: Text2Speech, output_text: str) -> np.ndarray:
 
 
 def get_assistant_reply(
-    messages: list[dict], tag: str = "gpt-3.5-turbo"
+    messages: List[Dict], tag: str = "gpt-3.5-turbo"
 ) -> str:
     """
     Generate and return a reply from the assistant based on the messages.
@@ -163,7 +185,7 @@ def play_assistant_reply(t2s: Text2Speech, stream: pyaudio.Stream, reply: str):
     stream.write(wav_array.astype(np.float32).tobytes())
 
 
-def main():
+def main(args):
     if not os.path.exists("tmp"):
         os.mkdir("tmp")
 
@@ -180,11 +202,11 @@ def main():
     text_to_speech = get_t2s_model(
         tag="kan-bayashi/tsukuyomi_full_band_vits_prosody"
     )
-    speech_to_text = get_s2t_model(mode="large")
+    speech_to_text = get_s2t_model(mode=args.whisper)
 
     messages = []
     # chatbotの人格を指定するプロンプト
-    with open("system.content", "r") as f:
+    with open(args.system, "r") as f:
         system_msg = f.read()
 
     messages.append({"role": "system", "content": system_msg})
@@ -217,4 +239,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = read_args()
+    main(args)

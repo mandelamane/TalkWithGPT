@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import pyaudio
 import soundfile as sf
@@ -47,7 +49,7 @@ def record_voice(file_name: str):
     audio.terminate()
 
 
-def save_recording(frames: list, file_name: str):
+def save_recording(frames: List, file_name: str):
     """
     A function that writes recorded data in numpy array to a wav file
 
